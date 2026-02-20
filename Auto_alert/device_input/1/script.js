@@ -12,12 +12,12 @@ let consecutiveNoFace = 0;
 const NO_FACE_THRESHOLD = 10; // 連続フレームで顔なし → エラー扱い
 
 // モデルURL（GitHub Pages公開時は自動で https://ユーザー名.github.io/repo/models/ になる）
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/';
 
 // モデルロード
 async function loadModels() {
     await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),  // ← ssdMobilenetv1 から tiny に変更（高速・軽量）
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
     ]);
@@ -39,7 +39,7 @@ async function startCamera() {
 
 // 顔検出ヘルパー
 async function detectFaces() {
-    return await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+    return await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
         .withFaceLandmarks()
         .withFaceDescriptors();
 }
