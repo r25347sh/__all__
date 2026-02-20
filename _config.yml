@@ -1,0 +1,4 @@
+plugins:
+  - jekyll-sitemap
+url: "https://r25347sh.github.io"
+baseurl: "/__all__"
