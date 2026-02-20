@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>簡易ウェブカメラ アイトラッキング</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0ff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #container {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+    }
+    #video, #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    #overlay {
+      z-index: 5;
+    }
+    #gazeDot {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(circle, #ff3366 0%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 0 20px #ff3366;
+      opacity: 0.85;
+      transition: opacity 0.3s;
+    }
+    #info {
+      padding: 16px;
+      background: rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    button {
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      margin: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #ff3366;
+      color: white;
+    }
+    button:hover { background: #ff6699; }
+  </style>
+</head>
+<body>
+
+<div id="info">
+  <h2>ウェブカメラ アイトラッキング デモ</h2>
+  <p>最初にキャリブレーションが必要です（点を9〜16回クリック）</p>
+  
+  <button id="startBtn">開始する（カメラON）</button>
+  <button id="restartBtn" style="display:none;">もう一度キャリブレーション</button>
+  <div id="status"></div>
+</div>
+
+<div id="container">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="overlay"></canvas>
+  <div id="gazeDot"></div>
+</div>
+
+<!-- WebGazer 本体（jsDelivr経由で最新安定版） -->
+<script src="https://cdn.jsdelivr.net/gh/brownhci/WebGazer@master/dist/webgazer.js"></script>
+
+<script>
+// 重要：WebGazerはグローバルに window.webgazer として露出される
+const gazeDot = document.getElementById('gazeDot');
+const statusDiv = document.getElementById('status');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+let isRunning = false;
+
+async function initWebGazer() {
+  if (isRunning) return;
+
+  statusDiv.textContent = "カメラを起動しています... 許可してください";
+
+  try {
+    // WebGazer初期化（最もシンプルな設定）
+    await window.webgazer
+      .setGazeListener((data, elapsedTime) => {
+        if (data == null) {
+          gazeDot.style.opacity = "0";
+          return;
+        }
+
+        const x = data.x;
+        const y = data.y;
+
+        // 画面内に収まるようにクランプ
+        const clampedX = Math.max(0, Math.min(window.innerWidth, x));
+        const clampedY = Math.max(0, Math.min(window.innerHeight, y));
+
+        gazeDot.style.left = clampedX + "px";
+        gazeDot.style.top  = clampedY + "px";
+        gazeDot.style.opacity = "0.85";
+      })
+      .showVideoPreview(true)           // 自分の顔が見えるように
+      .showPredictionPoints(true)       // 予測点を表示（デバッグ用）
+      .applyKalmanFilter(true)          // ノイズ軽減（おすすめ）
+      .begin();
+
+    statusDiv.textContent = "キャリブレーションを開始します → 赤い点を順番にクリックしてください";
+    isRunning = true;
+
+    startBtn.style.display = "none";
+    restartBtn.style.display = "inline-block";
+
+  } catch (err) {
+    statusDiv.textContent = "エラー: " + err.message + "\nカメラの許可が必要です";
+    console.error(err);
+  }
+}
+
+// 再キャリブレーション
+function resetCalibration() {
+  window.webgazer.clearGazeData();
+  window.webgazer.showCalibrationPoint(true);
+  statusDiv.textContent = "もう一度赤い点をクリックしてください";
+}
+
+startBtn.addEventListener('click', initWebGazer);
+restartBtn.addEventListener('click', resetCalibration);
+
+// 終了処理（ページ離脱時もできるだけ停止）
+window.addEventListener('beforeunload', () => {
+  if (window.webgazer) window.webgazer.end();
+});
+
+</script>
+</body>
+</html>
