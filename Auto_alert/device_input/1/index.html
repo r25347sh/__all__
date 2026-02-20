@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>警戒システム（マスク対応）</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; margin: 0; padding: 20px; }
+        #video { width: 640px; max-width: 100%; height: auto; border: 3px solid #333; border-radius: 8px; }
+        #canvas { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+        #controls { margin: 20px 0; }
+        button { padding: 12px 24px; margin: 8px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; color: white; }
+        #registerNoMask { background: #28a745; }
+        #registerMask { background: #007bff; }
+        #startMonitor { background: #dc3545; }
+        #status { font-size: 18px; font-weight: bold; color: #333; margin: 15px 0; }
+        .container { max-width: 800px; margin: 0 auto; position: relative; }
+        p.note { color: #666; font-size: 14px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>警戒システム（マスク対応版）</h1>
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <div id="controls">
+            <button id="registerNoMask">マスクなしで自分の顔を登録</button>
+            <button id="registerMask">マスクありで自分の顔を登録</button>
+            <button id="startMonitor">監視開始</button>
+        </div>
+
+        <p id="status">ステータス: モデルロード中...</p>
+        <p class="note">※ 登録は複数回（角度・照明違い）押すと精度向上します。カメラ許可が必要です。</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
